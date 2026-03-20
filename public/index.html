@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Application Meme Generator ✨</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Permanent+Marker&family=Patrick+Hand&family=Schoolbell&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #f4a5c0;
+    --blue: #7ec8e3;
+    --yellow: #fde68a;
+    --purple: #c4b5fd;
+    --green: #a7f3d0;
+    --coral: #fca5a5;
+    --navy: #1e3a5f;
+    --cream: #fefce8;
+    --ink: #1a1a2e;
+    --grid: #c8d8f0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Patrick Hand', cursive;
+    background: var(--cream);
+    min-height: 100vh;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  /* ===== FORM ===== */
+  #form-phase { max-width: 680px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  .form-header { text-align: center; margin-bottom: 48px; }
+  .form-header h1 {
+    font-family: 'Permanent Marker', cursive;
+    font-size: 3rem; color: var(--navy);
+    line-height: 1.1; margin-bottom: 12px; display: inline-block;
+  }
+  .form-header h1 span { display: inline-block; padding: 2px 8px; border-radius: 4px; }
+  .form-header h1 .w1 { background: var(--pink); transform: rotate(-2deg); }
+  .form-header h1 .w2 { background: var(--blue); transform: rotate(1deg); margin: 0 6px; }
+  .form-header h1 .w3 { background: var(--yellow); transform: rotate(-1deg); }
+  .form-header p { font-family: 'Caveat', cursive; font-size: 1.3rem; color: #555; }
+
+  .form-card {
+    background: white; border-radius: 12px; padding: 28px 32px;
+    margin-bottom: 20px; box-shadow: 4px 4px 0 var(--navy);
+    border: 2px solid var(--navy); position: relative;
+  }
+  .form-card::before {
+    content: attr(data-tape); position: absolute; top: -14px; left: 50%;
+    transform: translateX(-50%) rotate(-1deg);
+    background: rgba(253,230,138,0.85); border: 1px solid #d4b47a;
+    padding: 4px 18px; font-family: 'Caveat', cursive;
+    font-size: 0.85rem; color: #7a5c20; border-radius: 2px;
+  }
+
+  .section-label {
+    font-family: 'Permanent Marker', cursive; font-size: 1.1rem;
+    color: var(--navy); margin-bottom: 16px; padding-bottom: 6px;
+    border-bottom: 2px dashed var(--grid);
+  }
+
+  .field-group { margin-bottom: 18px; }
+
+  label { display: block; font-family: 'Caveat', cursive; font-size: 1.1rem; color: #444; margin-bottom: 5px; font-weight: 600; }
+
+  input[type="text"], input[type="number"], input[type="password"], textarea, select {
+    width: 100%; padding: 10px 14px; border: 2px solid var(--navy);
+    border-radius: 8px; font-family: 'Caveat', cursive; font-size: 1.1rem;
+    background: var(--cream); color: var(--ink); outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--pink); box-shadow: 3px 3px 0 var(--pink); }
+  textarea { resize: vertical; min-height: 80px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .emoji-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .emoji-btn {
+    padding: 8px 14px; border: 2px solid var(--navy); border-radius: 20px;
+    background: white; cursor: pointer; font-size: 1.1rem;
+    transition: all 0.15s; font-family: 'Caveat', cursive;
+  }
+  .emoji-btn:hover { background: var(--yellow); transform: scale(1.05); }
+  .emoji-btn.selected { background: var(--pink); border-color: var(--pink); font-weight: 700; box-shadow: 2px 2px 0 var(--navy); }
+
+  /* Photo upload slots */
+  .photo-slots { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  .photo-slot-wrapper {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+
+  .photo-slot {
+    border: 2px dashed var(--navy); border-radius: 10px; padding: 14px 10px;
+    text-align: center; cursor: pointer; background: var(--cream);
+    transition: background 0.2s; position: relative; min-height: 100px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .photo-slot:hover { background: #fff7d6; }
+  /* File input only covers the slot box, NOT the caption below */
+  .photo-slot input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; z-index: 1; }
+  .slot-icon { font-size: 1.6rem; }
+  .slot-label { font-family: 'Caveat', cursive; font-size: 0.85rem; color: #888; margin-top: 4px; }
+  .slot-badge {
+    position: absolute; top: 6px; left: 6px; background: var(--navy); color: white;
+    border-radius: 50%; width: 20px; height: 20px; font-size: 0.7rem;
+    display: flex; align-items: center; justify-content: center; font-family: 'Caveat', cursive;
+    z-index: 2;
+  }
+  .photo-slot-preview { width: 100%; max-height: 100px; object-fit: contain; border-radius: 4px; border: 2px solid var(--navy); display: none; background: #f9f9f9; }
+
+  /* Delete button — sits above the slot, shown only after upload */
+  .slot-delete-btn {
+    display: none; /* shown via JS after photo loaded */
+    width: 100%; padding: 5px 8px;
+    background: #fee2e2; border: 2px solid #fca5a5; border-radius: 6px;
+    font-family: 'Caveat', cursive; font-size: 0.88rem; color: #991b1b;
+    cursor: pointer; text-align: center; transition: background 0.15s;
+  }
+  .slot-delete-btn:hover { background: #fca5a5; }
+
+  /* Caption lives OUTSIDE .photo-slot so it's never covered by the file input */
+  .slot-caption-input {
+    width: 100%; padding: 6px 10px; border: 2px solid #ccc;
+    border-radius: 6px; font-family: 'Caveat', cursive; font-size: 0.9rem;
+    background: white; color: var(--ink); outline: none;
+    transition: border-color 0.2s;
+    display: none; /* shown after photo is loaded */
+  }
+  .slot-caption-input:focus { border-color: var(--pink); }
+  .slot-caption-input::placeholder { color: #aaa; }
+
+  .submit-btn {
+    display: block; width: 100%; padding: 18px; background: var(--navy);
+    color: white; border: none; border-radius: 12px;
+    font-family: 'Permanent Marker', cursive; font-size: 1.6rem;
+    cursor: pointer; box-shadow: 5px 5px 0 var(--pink); transition: all 0.15s;
+    margin-top: 32px; letter-spacing: 1px;
+  }
+  .submit-btn:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--pink); }
+  .submit-btn:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 var(--pink); }
+
+  /* ===== LOADING ===== */
+  #loading-phase {
+    display: none; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 100vh; text-align: center; padding: 40px;
+  }
+  .loading-doodle { font-size: 4rem; animation: spin 1.5s linear infinite; }
+  @keyframes spin { from{transform:rotate(0deg) scale(1);} 50%{transform:rotate(180deg) scale(1.2);} to{transform:rotate(360deg) scale(1);} }
+  .loading-text { font-family: 'Permanent Marker', cursive; font-size: 2rem; color: var(--navy); margin-top: 20px; }
+  .loading-sub { font-family: 'Caveat', cursive; font-size: 1.2rem; color: #666; margin-top: 8px; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ===== OUTPUT ===== */
+  #output-phase { display: none; padding: 40px 20px 60px; }
+  .output-controls { max-width: 820px; margin: 0 auto 20px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .ctrl-btn {
+    padding: 12px 24px; border-radius: 8px; border: 2px solid var(--navy);
+    font-family: 'Caveat', cursive; font-size: 1.1rem; cursor: pointer; transition: all 0.15s; font-weight: 600;
+  }
+  .ctrl-btn:hover { transform: translateY(-2px); box-shadow: 3px 3px 0 var(--navy); }
+  .btn-print { background: var(--green); }
+  .btn-publish { background: var(--blue); }
+  .btn-new { background: var(--pink); }
+  .btn-regen { background: var(--yellow); }
+
+  /* Share modal */
+  #share-modal {
+    display: none;
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.45);
+    align-items: center; justify-content: center;
+  }
+  #share-modal.open { display: flex; }
+  .share-card {
+    background: white; border-radius: 16px; padding: 32px 36px;
+    box-shadow: 6px 6px 0 var(--navy); border: 2px solid var(--navy);
+    max-width: 480px; width: 90%; text-align: center;
+    font-family: 'Caveat', cursive;
+  }
+  .share-card h2 {
+    font-family: 'Permanent Marker', cursive; font-size: 1.6rem;
+    color: var(--navy); margin-bottom: 8px;
+  }
+  .share-card p { font-size: 1.1rem; color: #555; margin-bottom: 20px; }
+  .share-url-row {
+    display: flex; gap: 8px; align-items: center; margin-bottom: 20px;
+  }
+  .share-url-input {
+    flex: 1; padding: 10px 14px; border: 2px solid var(--navy); border-radius: 8px;
+    font-family: 'Caveat', cursive; font-size: 1rem; background: var(--cream);
+    color: var(--ink); outline: none;
+  }
+  .copy-btn {
+    padding: 10px 18px; background: var(--navy); color: white; border: none;
+    border-radius: 8px; font-family: 'Caveat', cursive; font-size: 1rem;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .copy-btn:hover { opacity: 0.85; }
+  .copy-btn.copied { background: #16a34a; }
+  .share-close {
+    padding: 10px 28px; background: white; border: 2px solid var(--navy);
+    border-radius: 8px; font-family: 'Caveat', cursive; font-size: 1rem;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .share-close:hover { background: var(--cream); }
+
+  /* ===== MEME CANVAS ===== */
+  #meme-canvas {
+    max-width: 820px; margin: 0 auto; border: 3px solid var(--navy); border-radius: 4px;
+    padding: 28px 36px 32px; position: relative; box-shadow: 8px 8px 0 #aaa;
+    font-family: 'Caveat', cursive;
+  }
+  #meme-canvas::before { content: "✿ ✦ ✿"; position: absolute; top: 10px; right: 16px; font-size: 1.1rem; color: var(--pink); opacity: 0.65; }
+
+  .meme-title { text-align: center; margin-bottom: 12px; }
+  .title-cutout { font-family: 'Permanent Marker', cursive; font-size: 2.3rem; line-height: 1.2; }
+  .title-word { display: inline-block; padding: 3px 11px; margin: 2px; border-radius: 4px; }
+
+  .headline-box {
+    background: var(--navy); color: white; padding: 9px 18px; border-radius: 8px;
+    font-family: 'Permanent Marker', cursive; font-size: 1.1rem; text-align: center;
+    line-height: 1.4; position: relative; margin-bottom: 12px;
+  }
+  .headline-box::after { content: "★"; position: absolute; right: 12px; top: 8px; font-size: 1.3rem; color: var(--yellow); }
+
+  .meme-body { display: grid; gap: 12px; align-items: start; }
+  .meme-body.layout-2col { grid-template-columns: 1fr 1fr; }
+  .meme-body.layout-3col { grid-template-columns: 1fr 1fr 1fr; }
+
+  /* Hero photo: centred above the columns */
+  .hero-photo-row {
+    display: flex; justify-content: center; margin-bottom: 10px;
+  }
+
+  .meme-col { display: flex; flex-direction: column; gap: 9px; }
+
+  .photo-card {
+    background: white; padding: 5px 5px 20px; border: 2px solid #ccc;
+    box-shadow: 3px 3px 8px rgba(0,0,0,0.13); position: relative; align-self: flex-start;
+  }
+  .photo-card img { display: block; object-fit: contain; width: 100%; background: #f9f9f9; }
+  .photo-caption { text-align: center; font-family: 'Caveat', cursive; font-size: 0.82rem; color: #555; margin-top: 3px; }
+
+  .taped::before {
+    content: ''; position: absolute; top: -8px; left: 50%; transform: translateX(-50%) rotate(-1.5deg);
+    width: 50px; height: 17px; background: rgba(253,230,138,0.72); border: 1px solid #d4b47a; border-radius: 2px; z-index: 2;
+  }
+
+  .sticky { padding: 9px 11px; border-radius: 2px; box-shadow: 2px 2px 5px rgba(0,0,0,0.07); }
+  .sticky h3 { font-family: 'Permanent Marker', cursive; font-size: 0.88rem; margin-bottom: 5px; color: var(--navy); }
+  .sticky p { font-size: 0.98rem; line-height: 1.42; }
+
+  .job-list { list-style: none; padding: 0; }
+  .job-list li { padding: 2px 0; font-size: 0.96rem; display: flex; align-items: flex-start; gap: 5px; }
+  .job-list li::before { content: "•"; font-size: 1rem; color: var(--navy); flex-shrink: 0; }
+
+  .facts-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+  .fact-chip { padding: 3px 10px; border-radius: 20px; border: 2px solid var(--navy); font-size: 0.88rem; font-weight: 600; }
+
+  .wavy {
+    height: 10px; margin: 8px 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 10'%3E%3Cpath d='M0 5 Q5 0 10 5 Q15 10 20 5 Q25 0 30 5 Q35 10 40 5' fill='none' stroke='%23f4a5c0' stroke-width='2'/%3E%3C/svg%3E");
+    background-repeat: repeat-x; background-size: 40px 10px;
+  }
+
+  .stats-row { display: flex; gap: 7px; flex-wrap: wrap; }
+  .stat-box { flex: 1; min-width: 68px; padding: 7px 5px; border: 2px solid var(--navy); border-radius: 8px; text-align: center; background: white; }
+  .stat-num { font-family: 'Permanent Marker', cursive; font-size: 1.35rem; color: var(--navy); display: block; }
+  .stat-label { font-family: 'Caveat', cursive; font-size: 0.78rem; color: #666; }
+
+  .doodle-corner { position: absolute; font-size: 1.5rem; opacity: 0.4; }
+  .meme-footer { text-align: center; margin-top: 8px; font-family: 'Caveat', cursive; font-size: 0.82rem; color: #aaa; }
+
+  /* ===== DRAG AND DROP ===== */
+  .drag-handle {
+    position: absolute;
+    top: 6px; left: 6px;
+    width: 18px; height: 18px;
+    display: none;
+    align-items: center; justify-content: center;
+    cursor: grab;
+    color: rgba(30,58,95,0.35);
+    font-size: 14px;
+    line-height: 1;
+    user-select: none;
+    z-index: 10;
+    border-radius: 3px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .drag-handle:hover {
+    color: var(--navy);
+    background: rgba(30,58,95,0.08);
+  }
+  .drag-handle:active { cursor: grabbing; }
+
+  /* Show handle on sticky hover, hide on text edit */
+  .draggable-block:hover .drag-handle { display: flex; }
+  .draggable-block[contenteditable="true"] .drag-handle { display: none; }
+
+  /* Block being dragged */
+  .draggable-block.is-dragging {
+    opacity: 0.4;
+    outline: 2px dashed var(--navy);
+    outline-offset: 2px;
+  }
+
+  /* Drop zone indicator — shown when dragging over a column */
+  .drop-indicator {
+    height: 4px;
+    background: var(--navy);
+    border-radius: 2px;
+    margin: 2px 0;
+    display: none;
+    pointer-events: none;
+  }
+  .drop-indicator.active { display: block; }
+
+  /* Columns accept drops */
+  .meme-col.drag-over {
+    outline: 2px dashed rgba(30,58,95,0.3);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+
+  /* Hide drag handles in print */
+  @media print {
+    .drag-handle { display: none !important; }
+  }
+  /* Hint on hover for editable elements */
+  #meme-canvas [data-editable]:hover {
+    outline: 2px dashed rgba(30,58,95,0.35);
+    outline-offset: 2px;
+    border-radius: 3px;
+    cursor: text;
+  }
+  #meme-canvas [data-editable]:hover::after {
+    content: '✏️';
+    position: absolute;
+    top: -10px; right: -6px;
+    font-size: 0.75rem;
+    pointer-events: none;
+    opacity: 0.7;
+  }
+  /* Active editing state */
+  #meme-canvas [data-editable][contenteditable="true"] {
+    outline: 2px solid var(--navy) !important;
+    outline-offset: 2px;
+    border-radius: 3px;
+    cursor: text;
+    background: rgba(255,255,255,0.55) !important;
+    min-width: 40px;
+    min-height: 1em;
+    white-space: pre-wrap;
+  }
+  /* Edit hint bar */
+  #edit-hint {
+    display: none;
+    text-align: center;
+    font-family: 'Caveat', cursive;
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 8px;
+    padding: 6px 12px;
+    background: rgba(253,230,138,0.5);
+    border-radius: 6px;
+    max-width: 820px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  @media print {
+    @page { size: Letter portrait; margin: 0; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+    html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; }
+    #edit-hint { display: none !important; }
+    [data-editable] { outline: none !important; cursor: default !important; }
+    [data-editable]::after { display: none !important; }
+    #form-phase, #loading-phase { display: none !important; }
+    #output-phase {
+      display: block !important; padding: 0 !important; margin: 0 !important;
+      width: 8.5in !important; height: 11in !important; overflow: hidden !important;
+    }
+    .output-controls { display: none !important; }
+    #meme-canvas {
+      -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+      box-shadow: none !important; border: 2px solid #1e3a5f !important;
+      max-width: 100% !important; width: 100% !important;
+      margin: 0 !important; border-radius: 0 !important;
+      /* transform-origin set by JS; transform scale set by JS */
+      transform-origin: top left !important;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .two-col, .photo-slots { grid-template-columns: 1fr; }
+    .meme-body.layout-2col, .meme-body.layout-3col { grid-template-columns: 1fr; }
+    #meme-canvas { padding: 18px 14px 24px; }
+    .title-cutout { font-size: 1.7rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PHASE 1: FORM -->
+<div id="form-phase">
+  <div class="form-header">
+    <h1><span class="w1">PLZ</span> <span class="w2">HIRE</span> <span class="w3">ME</span></h1>
+    <p>Fill this out and get your personalized application meme ✨</p>
+  </div>
+
+  <div class="form-card" data-tape="📌 the basics">
+    <div class="section-label">👋 About You</div>
+    <div class="two-col">
+      <div class="field-group">
+        <label>Your Name *</label>
+        <input type="text" id="name" placeholder="e.g. Allie Latic" required>
+      </div>
+      <div class="field-group">
+        <label>Your Vibe / Tagline</label>
+        <input type="text" id="tagline" placeholder="e.g. 2 years into a job hunt!">
+      </div>
+    </div>
+    <div class="field-group">
+      <label>Your Photos <span style="font-weight:400; color:#888;">(1 required, up to 3 total)</span></label>
+      <div class="photo-slots">
+        <div class="photo-slot-wrapper">
+          <div class="photo-slot" id="slot-0">
+            <span class="slot-badge">1</span>
+            <input type="file" id="photo-input-0" accept="image/*" onchange="handlePhoto(this,0)">
+            <div class="slot-icon" id="slot-icon-0">📸</div>
+            <div class="slot-label" id="slot-label-0">Main photo</div>
+            <img id="photo-preview-0" class="photo-slot-preview" alt="">
+          </div>
+          <button class="slot-delete-btn" id="delete-btn-0" onclick="clearPhoto(0)">🗑️ Remove photo</button>
+          <input class="slot-caption-input" id="caption-0" type="text" placeholder="Caption for photo 1">
+        </div>
+        <div class="photo-slot-wrapper">
+          <div class="photo-slot" id="slot-1">
+            <span class="slot-badge">2</span>
+            <input type="file" id="photo-input-1" accept="image/*" onchange="handlePhoto(this,1)">
+            <div class="slot-icon" id="slot-icon-1">📷</div>
+            <div class="slot-label" id="slot-label-1">2nd photo (optional)</div>
+            <img id="photo-preview-1" class="photo-slot-preview" alt="">
+          </div>
+          <button class="slot-delete-btn" id="delete-btn-1" onclick="clearPhoto(1)">🗑️ Remove photo</button>
+          <input class="slot-caption-input" id="caption-1" type="text" placeholder="Caption for photo 2">
+        </div>
+        <div class="photo-slot-wrapper">
+          <div class="photo-slot" id="slot-2">
+            <span class="slot-badge">3</span>
+            <input type="file" id="photo-input-2" accept="image/*" onchange="handlePhoto(this,2)">
+            <div class="slot-icon" id="slot-icon-2">🖼️</div>
+            <div class="slot-label" id="slot-label-2">3rd photo (optional)</div>
+            <img id="photo-preview-2" class="photo-slot-preview" alt="">
+          </div>
+          <button class="slot-delete-btn" id="delete-btn-2" onclick="clearPhoto(2)">🗑️ Remove photo</button>
+          <input class="slot-caption-input" id="caption-2" type="text" placeholder="Caption for photo 3">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-card" data-tape="🎓 your credentials">
+    <div class="section-label">🏆 Background & Experience</div>
+    <div class="field-group">
+      <label>Degrees / Certifications</label>
+      <input type="text" id="education" placeholder="e.g. MLIS, BA in Communications">
+    </div>
+    <div class="field-group">
+      <label>Years of work experience</label>
+      <input type="number" id="years-exp" placeholder="e.g. 5" min="0" max="50">
+    </div>
+    <div class="field-group">
+      <label>Your top 3–5 skills (comma separated)</label>
+      <input type="text" id="skills" placeholder="e.g. Research, SEO, Customer Service, Writing">
+    </div>
+    <div class="field-group">
+      <label>What have you done in your career so far?</label>
+      <textarea id="career-story" placeholder="e.g. I've done deep-dive research, SEO copywriting, worked in libraries..."></textarea>
+    </div>
+    <div class="field-group">
+      <label>A quirky / fun fact about your work life</label>
+      <input type="text" id="fun-fact" placeholder="e.g. I once read 47 research papers in one weekend">
+    </div>
+  </div>
+
+  <div class="form-card" data-tape="✨ dreams & goals">
+    <div class="section-label">🚀 What You're Looking For</div>
+    <div class="field-group">
+      <label>Job roles or fields you want (comma separated)</label>
+      <input type="text" id="dream-jobs" placeholder="e.g. Librarian, Virtual Assistant, Marketing, Customer Service">
+    </div>
+    <div class="field-group">
+      <label>Your ideal work environment</label>
+      <div class="emoji-picker" id="env-picker">
+        <button class="emoji-btn" data-val="Remote 🏠" onclick="togglePick(this,'env-picker')">Remote 🏠</button>
+        <button class="emoji-btn" data-val="In-person 🏢" onclick="togglePick(this,'env-picker')">In-person 🏢</button>
+        <button class="emoji-btn" data-val="Hybrid 🔀" onclick="togglePick(this,'env-picker')">Hybrid 🔀</button>
+        <button class="emoji-btn" data-val="Doesn't matter 🌍" onclick="togglePick(this,'env-picker')">Doesn't matter 🌍</button>
+      </div>
+    </div>
+    <div class="field-group">
+      <label>Your superpower (one sentence brag)</label>
+      <input type="text" id="superpower" placeholder="e.g. I can find any information online within 10 minutes">
+    </div>
+    <div class="field-group">
+      <label>What makes you, YOU? (something memorable)</label>
+      <textarea id="personality" placeholder="e.g. I run a tarot club AND volunteer at a library. Eclectic queen."></textarea>
+    </div>
+  </div>
+
+  <div class="form-card" data-tape="🌟 fun stuff">
+    <div class="section-label">🎨 Personality Extras</div>
+    <div class="two-col">
+      <div class="field-group">
+        <label>A hobby or passion</label>
+        <input type="text" id="hobby" placeholder="e.g. tarot, running, baking">
+      </div>
+      <div class="field-group">
+        <label>Pet name <span style="font-weight:400;color:#888;">(optional)</span></label>
+        <input type="text" id="pet" placeholder="e.g. Baraboo the dog">
+        <input type="text" id="pet-caption" placeholder="Pet caption (optional)" style="margin-top:6px;padding:6px 10px;border:2px solid #ccc;border-radius:6px;font-family:'Caveat',cursive;font-size:0.9rem;background:white;width:100%;outline:none;color:var(--ink);">
+        <div class="photo-slot-wrapper" style="margin-top:8px;">
+          <div class="photo-slot" id="pet-slot" style="min-height:70px;padding:10px;">
+            <input type="file" id="pet-photo-input" accept="image/*" onchange="handlePetPhoto(this)">
+            <div class="slot-icon" id="pet-slot-icon">🐾</div>
+            <div class="slot-label" id="pet-slot-label">Pet photo (optional)</div>
+            <img id="pet-photo-preview" class="photo-slot-preview" alt="">
+          </div>
+          <button class="slot-delete-btn" id="pet-delete-btn" onclick="clearPetPhoto()">🗑️ Remove pet photo</button>
+        </div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label>What energy do you bring to a team?</label>
+      <div class="emoji-picker" id="energy-picker">
+        <button class="emoji-btn" data-val="Hype Person 📣" onclick="togglePick(this,'energy-picker')">Hype Person 📣</button>
+        <button class="emoji-btn" data-val="Deep Thinker 🧠" onclick="togglePick(this,'energy-picker')">Deep Thinker 🧠</button>
+        <button class="emoji-btn" data-val="Steady Rock 🪨" onclick="togglePick(this,'energy-picker')">Steady Rock 🪨</button>
+        <button class="emoji-btn" data-val="Creative Chaos ✨" onclick="togglePick(this,'energy-picker')">Creative Chaos ✨</button>
+      </div>
+    </div>
+    <div class="field-group">
+      <label>Anything else you want on your meme?</label>
+      <textarea id="extra" placeholder="e.g. I'm open to entry-level, I relocate, I love spreadsheets..."></textarea>
+    </div>
+  </div>
+
+  <button class="submit-btn" onclick="generateMeme()">✨ Generate My Application Meme ✨</button>
+</div>
+
+<!-- PHASE 2: LOADING -->
+<div id="loading-phase">
+  <div class="loading-doodle">✨</div>
+  <div class="loading-text">Crafting your meme...</div>
+  <div class="loading-sub" id="loading-msg">Making you look irresistible to employers...</div>
+</div>
+
+<!-- PHASE 3: OUTPUT -->
+<div id="output-phase">
+  <div class="output-controls">
+    <button class="ctrl-btn btn-print" onclick="smartPrint()">🖨️ Print / Save as PDF</button>
+    <button class="ctrl-btn btn-publish" onclick="publishMeme()">🌐 Publish to Web</button>
+    <button class="ctrl-btn btn-regen" onclick="regenerate()">🔄 Regenerate</button>
+    <button class="ctrl-btn btn-new" onclick="startOver()">✏️ Start Over</button>
+  </div>
+  <div id="edit-hint">✏️ Click any text to edit · ⠿ Drag sections to rearrange</div>
+  <div id="meme-canvas"></div>
+</div>
+
+<!-- Share modal -->
+<div id="share-modal">
+  <div class="share-card">
+    <h2>🎉 Your meme is live!</h2>
+    <p>Share this link with anyone — no login needed.</p>
+    <div class="share-url-row">
+      <input class="share-url-input" id="share-url" type="text" readonly>
+      <button class="copy-btn" id="copy-btn" onclick="copyShareUrl()">Copy link</button>
+    </div>
+    <button class="share-close" onclick="closeShareModal()">Done</button>
+  </div>
+</div>
+
+<script>
+let userData = {};
+let photoDataUrls = [null, null, null];
+let petPhotoDataUrl = null;
+
+const loadingMessages = [
+  "Sprinkling career magic ✨",
+  "Convincing employers you're the one...",
+  "Adding unnecessary but delightful doodles...",
+  "Making your experience sound extra impressive...",
+  "Almost ready — this is going to be great!"
+];
+
+// ── Background themes ──────────────────────────────────────────────────────
+const bgThemes = [
+  { bg:'#fefce8', img:'linear-gradient(#c8d8f0 1px,transparent 1px),linear-gradient(90deg,#c8d8f0 1px,transparent 1px)', sz:'26px 26px' },
+  { bg:'#fff0f5', img:'linear-gradient(#f9c0d0 1px,transparent 1px),linear-gradient(90deg,#f9c0d0 1px,transparent 1px)', sz:'26px 26px' },
+  { bg:'#f0fdf6', img:'linear-gradient(#a7f3d0 1px,transparent 1px),linear-gradient(90deg,#a7f3d0 1px,transparent 1px)', sz:'26px 26px' },
+  { bg:'#f5f0ff', img:'radial-gradient(circle,#c4b5fd 1px,transparent 1px)', sz:'22px 22px' },
+  { bg:'#f0f9ff', img:'radial-gradient(circle,#7ec8e3 1.2px,transparent 1.2px)', sz:'22px 22px' },
+  { bg:'#fffbeb', img:'radial-gradient(circle,#fbbf24 1px,transparent 1px)', sz:'20px 20px' },
+  { bg:'#fff5f8', img:'repeating-linear-gradient(45deg,#fce7ef 0px,#fce7ef 2px,transparent 2px,transparent 18px)', sz:'26px 26px' },
+  { bg:'#f0fff8', img:'repeating-linear-gradient(45deg,#d1fae5 0px,#d1fae5 2px,transparent 2px,transparent 18px)', sz:'26px 26px' },
+  { bg:'#faf5ff', img:'linear-gradient(#e9d5ff 1px,transparent 1px),linear-gradient(90deg,#e9d5ff 1px,transparent 1px)', sz:'28px 28px' },
+  { bg:'#fff7f3', img:'linear-gradient(#fcd5c0 1px,transparent 1px),linear-gradient(90deg,#fcd5c0 1px,transparent 1px)', sz:'26px 26px' },
+];
+
+function pickBg() { return bgThemes[Math.floor(Math.random() * bgThemes.length)]; }
+
+function applyBg(theme) {
+  const el = document.getElementById('meme-canvas');
+  el.style.backgroundColor = theme.bg;
+  el.style.backgroundImage = theme.img;
+  el.style.backgroundSize = theme.sz;
+  // inject print-specific bg into a style tag
+  let s = document.getElementById('print-bg-style');
+  if (!s) { s = document.createElement('style'); s.id = 'print-bg-style'; document.head.appendChild(s); }
+  s.textContent = `@media print { html,body { background-color:${theme.bg} !important; background-image:${theme.img} !important; background-size:${theme.sz} !important; } }`;
+}
+
+// ── Photo handling ─────────────────────────────────────────────────────────
+function handlePhoto(input, idx) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      photoDataUrls[idx] = e.target.result;
+      document.getElementById(`photo-preview-${idx}`).src = e.target.result;
+      document.getElementById(`photo-preview-${idx}`).style.display = 'block';
+      document.getElementById(`slot-icon-${idx}`).style.display = 'none';
+      document.getElementById(`slot-label-${idx}`).style.display = 'none';
+      document.getElementById(`delete-btn-${idx}`).style.display = 'block';
+      document.getElementById(`caption-${idx}`).style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function clearPhoto(idx) {
+  photoDataUrls[idx] = null;
+  const preview = document.getElementById(`photo-preview-${idx}`);
+  preview.src = ''; preview.style.display = 'none';
+  document.getElementById(`slot-icon-${idx}`).style.display = '';
+  document.getElementById(`slot-label-${idx}`).style.display = '';
+  document.getElementById(`delete-btn-${idx}`).style.display = 'none';
+  document.getElementById(`caption-${idx}`).style.display = 'none';
+  document.getElementById(`caption-${idx}`).value = '';
+  document.getElementById(`photo-input-${idx}`).value = '';
+}
+
+function handlePetPhoto(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      petPhotoDataUrl = e.target.result;
+      document.getElementById('pet-photo-preview').src = e.target.result;
+      document.getElementById('pet-photo-preview').style.display = 'block';
+      document.getElementById('pet-slot-icon').style.display = 'none';
+      document.getElementById('pet-slot-label').style.display = 'none';
+      document.getElementById('pet-delete-btn').style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function clearPetPhoto() {
+  petPhotoDataUrl = null;
+  const preview = document.getElementById('pet-photo-preview');
+  preview.src = ''; preview.style.display = 'none';
+  document.getElementById('pet-slot-icon').style.display = '';
+  document.getElementById('pet-slot-label').style.display = '';
+  document.getElementById('pet-delete-btn').style.display = 'none';
+  document.getElementById('pet-photo-input').value = '';
+}
+
+function togglePick(btn, groupId) {
+  document.querySelectorAll(`#${groupId} .emoji-btn`).forEach(b => b.classList.remove('selected'));
+  btn.classList.toggle('selected');
+}
+function getSelectedEmoji(id) { const s = document.querySelector(`#${id} .emoji-btn.selected`); return s ? s.dataset.val : null; }
+
+function collectFormData() {
+  return {
+    name: document.getElementById('name').value.trim(),
+    tagline: document.getElementById('tagline').value.trim(),
+    captions: [0,1,2].map(i => document.getElementById(`caption-${i}`).value.trim()),
+    education: document.getElementById('education').value.trim(),
+    years_exp: document.getElementById('years-exp').value.trim(),
+    skills: document.getElementById('skills').value.trim(),
+    career_story: document.getElementById('career-story').value.trim(),
+    fun_fact: document.getElementById('fun-fact').value.trim(),
+    dream_jobs: document.getElementById('dream-jobs').value.trim(),
+    work_env: getSelectedEmoji('env-picker') || 'Flexible',
+    superpower: document.getElementById('superpower').value.trim(),
+    personality: document.getElementById('personality').value.trim(),
+    hobby: document.getElementById('hobby').value.trim(),
+    pet: document.getElementById('pet').value.trim(),
+    pet_caption: document.getElementById('pet-caption').value.trim(),
+    team_energy: getSelectedEmoji('energy-picker') || 'Adaptable',
+    extra: document.getElementById('extra').value.trim(),
+    photoCount: photoDataUrls.filter(Boolean).length,
+    hasPetPhoto: !!petPhotoDataUrl,
+  };
+}
+
+function startLoadingMessages() {
+  let i = 0; const el = document.getElementById('loading-msg');
+  return setInterval(() => { i = (i+1) % loadingMessages.length; el.textContent = loadingMessages[i]; }, 2200);
+}
+
+// ── Generate ───────────────────────────────────────────────────────────────
+async function generateMeme() {
+  userData = collectFormData();
+  if (!userData.name) { alert('Please enter your name!'); return; }
+
+  document.getElementById('form-phase').style.display = 'none';
+  document.getElementById('loading-phase').style.display = 'flex';
+  const interval = startLoadingMessages();
+
+  try {
+    const response = await fetch("/api/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1200,
+        system: `You are a creative copywriter making fun, playful, scrapbook-style "application memes" — compact 1-pagers that help job seekers stand out. KEEP ALL TEXT SHORT so the layout stays dense and balanced with no white space gaps.
+
+Respond ONLY with valid JSON — no markdown fences, no preamble.
+
+{
+  "headline": "5-8 word punchy headline",
+  "intro": "2 short sentences in first person, max 28 words total",
+  "skill_chips": ["Skill + emoji","Skill + emoji","Skill + emoji","Skill + emoji","Skill + emoji"],
+  "fun_facts": ["Max 10 words","Max 10 words","Max 10 words"],
+  "career_summary": "2 short sentences, max 30 words total",
+  "dream_jobs_list": ["Job 1","Job 2","Job 3","Job 4"],
+  "superpower_quote": "One punchy sentence max 14 words",
+  "personality_blurb": "One fun sentence max 16 words",
+  "title_words": ["WORD1","WORD2","WORD3"],
+  "color_scheme": ["#hex1","#hex2","#hex3","#hex4"],
+  "stat1_num": "number",
+  "stat1_label": "3-4 word label",
+  "stat2_num": "number",
+  "stat2_label": "3-4 word label",
+  "stat3_num": "number",
+  "stat3_label": "3-4 word label",
+  "closing_line": "Max 9 word CTA or slogan"
+}
+
+Color rules: all 4 colors MUST be light pastel (lightness > 75%) so dark text stays legible. Good palette examples: warm pinks+yellows, cool blues+mints, purple+peach, coral+lavender. Avoid any dark or heavily saturated hex.`,
+        messages: [{ role: "user", content: buildPrompt(userData) }]
+      })
+    });
+
+    const data = await response.json();
+    clearInterval(interval);
+    const textBlock = data.content?.find(b => b.type === 'text');
+    if (!textBlock) throw new Error("No text in response");
+    let memeData;
+    try { memeData = JSON.parse(textBlock.text.replace(/```json|```/g,'').trim()); }
+    catch { throw new Error("Couldn't parse JSON: " + textBlock.text.slice(0,200)); }
+    document.getElementById('loading-phase').style.display = 'none';
+    renderMeme(memeData, userData);
+
+  } catch(err) {
+    clearInterval(interval);
+    document.getElementById('loading-phase').style.display = 'none';
+    document.getElementById('form-phase').style.display = 'block';
+    alert('Something went wrong: ' + err.message);
+  }
+}
+
+function buildPrompt(d) {
+  return `Create an application meme for:
+Name: ${d.name}
+Tagline: ${d.tagline||'not provided'}
+Education: ${d.education||'not provided'}
+Years exp: ${d.years_exp||'unknown'}
+Skills: ${d.skills||'not provided'}
+Career: ${d.career_story||'not provided'}
+Fun fact: ${d.fun_fact||'not provided'}
+Dream jobs: ${d.dream_jobs||'not provided'}
+Work env: ${d.work_env}
+Superpower: ${d.superpower||'not provided'}
+Personality: ${d.personality||'not provided'}
+Hobby: ${d.hobby||'not provided'}
+Pet: ${d.pet||'none'}
+Energy: ${d.team_energy}
+Photos: ${d.photoCount}
+Extra: ${d.extra||'none'}
+
+Make it fun, warm, playful — genuinely sell them. title_words = 3 punchy uppercase words. ALL text SHORT. Color scheme = 4 light pastel hex codes with great contrast for dark text.`;
+}
+
+function regenerate() { document.getElementById('output-phase').style.display='none'; generateMeme(); }
+function startOver() { document.getElementById('output-phase').style.display='none'; document.getElementById('form-phase').style.display='block'; }
+
+// ── Publish to Web ──────────────────────────────────────────────────────────
+async function publishMeme() {
+  const btn = document.querySelector('.btn-publish');
+  btn.textContent = '⏳ Publishing...';
+  btn.disabled = true;
+
+  try {
+    const canvas = document.getElementById('meme-canvas');
+
+    // Get Upstash credentials for direct browser uploads
+    const tokenRes = await fetch('/api/photo-token');
+    if (!tokenRes.ok) throw new Error('Could not get upload credentials');
+    const { url: kvUrl, token: kvToken } = await tokenRes.json();
+    const expiry = 60 * 60 * 24 * 365;
+
+    // Clone canvas and strip editing UI
+    const canvasClone = canvas.cloneNode(true);
+    canvasClone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+    canvasClone.querySelectorAll('[data-editable]').forEach(el => el.removeAttribute('data-editable'));
+
+    // Upload each photo directly from browser to Upstash, replace with ID ref
+    const imgEls = Array.from(canvasClone.querySelectorAll('img'));
+    await Promise.all(imgEls.map(async img => {
+      if (!img.src || !img.src.startsWith('data:')) return;
+      const photoId = Math.random().toString(36).slice(2, 12);
+      // Upload directly to Upstash — bypasses Vercel's 4.5MB body limit
+      await fetch(`${kvUrl}/pipeline`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${kvToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify([
+          ['SET', `photo:${photoId}`, img.src, 'EX', expiry]
+        ]),
+      });
+      // Replace base64 with ID reference; published page fetches via /p/:id
+      img.setAttribute('data-photo-id', photoId);
+      img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+      img.style.background = '#f9f9f9';
+    }));
+
+    // Capture background styles
+    const bgColor = canvas.style.backgroundColor;
+    const bgImage = canvas.style.backgroundImage;
+    const bgSize  = canvas.style.backgroundSize;
+
+    // Photo loader script embedded in the published page
+    const hasPhotos = imgEls.some(img => img.getAttribute('data-photo-id'));
+    const photoLoaderScript = hasPhotos ? `<script>
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('img[data-photo-id]').forEach(function(img){
+    img.src='/p/'+img.getAttribute('data-photo-id');
+  });
+});
+</scr` + `ipt>` : '';
+
+    const snapshot = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Application Meme ✨</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Permanent+Marker&family=Patrick+Hand&display=swap" rel="stylesheet">
+${photoLoaderScript}
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#f0f0f0;display:flex;flex-direction:column;align-items:center;padding:40px 20px;min-height:100vh;font-family:'Patrick Hand',cursive;}
+#meme-canvas{max-width:820px;width:100%;border:3px solid #1e3a5f;border-radius:4px;padding:28px 36px 32px;position:relative;box-shadow:8px 8px 0 #aaa;font-family:'Caveat',cursive;background-color:${bgColor};background-image:${bgImage};background-size:${bgSize};}
+.meme-title{text-align:center;margin-bottom:12px;}
+.title-cutout{font-family:'Permanent Marker',cursive;font-size:2.3rem;line-height:1.2;}
+.title-word{display:inline-block;padding:3px 11px;margin:2px;border-radius:4px;}
+.headline-box{background:#1e3a5f;color:white;padding:9px 18px;border-radius:8px;font-family:'Permanent Marker',cursive;font-size:1.1rem;text-align:center;line-height:1.4;position:relative;margin-bottom:12px;}
+.headline-box::after{content:"★";position:absolute;right:12px;top:8px;font-size:1.3rem;color:#fde68a;}
+.meme-body{display:grid;gap:12px;align-items:start;}
+.meme-body.layout-2col{grid-template-columns:1fr 1fr;}
+.hero-photo-row{display:flex;justify-content:center;margin-bottom:10px;}
+.meme-col{display:flex;flex-direction:column;gap:9px;}
+.photo-card{background:white;padding:5px 5px 20px;border:2px solid #ccc;box-shadow:3px 3px 8px rgba(0,0,0,0.13);position:relative;align-self:flex-start;}
+.photo-card img{display:block;object-fit:contain;width:100%;background:#f9f9f9;min-height:40px;}
+.photo-caption{text-align:center;font-family:'Caveat',cursive;font-size:0.82rem;color:#555;margin-top:3px;}
+.taped::before{content:'';position:absolute;top:-8px;left:50%;transform:translateX(-50%) rotate(-1.5deg);width:50px;height:17px;background:rgba(253,230,138,0.72);border:1px solid #d4b47a;border-radius:2px;z-index:2;}
+.sticky{padding:9px 11px;border-radius:2px;box-shadow:2px 2px 5px rgba(0,0,0,0.07);}
+.sticky h3{font-family:'Permanent Marker',cursive;font-size:0.88rem;margin-bottom:5px;color:#1e3a5f;}
+.sticky p{font-size:0.98rem;line-height:1.42;}
+.job-list{list-style:none;padding:0;}
+.job-list li{padding:2px 0;font-size:0.96rem;display:flex;align-items:flex-start;gap:5px;}
+.job-list li::before{content:"•";font-size:1rem;color:#1e3a5f;flex-shrink:0;}
+.facts-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;}
+.fact-chip{padding:3px 10px;border-radius:20px;border:2px solid #1e3a5f;font-size:0.88rem;font-weight:600;}
+.wavy{height:10px;margin:8px 0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 10'%3E%3Cpath d='M0 5 Q5 0 10 5 Q15 10 20 5 Q25 0 30 5 Q35 10 40 5' fill='none' stroke='%23f4a5c0' stroke-width='2'/%3E%3C/svg%3E");background-repeat:repeat-x;background-size:40px 10px;}
+.stats-row{display:flex;gap:7px;flex-wrap:wrap;}
+.stat-box{flex:1;min-width:68px;padding:7px 5px;border:2px solid #1e3a5f;border-radius:8px;text-align:center;background:white;}
+.stat-num{font-family:'Permanent Marker',cursive;font-size:1.35rem;color:#1e3a5f;display:block;}
+.stat-label{font-family:'Caveat',cursive;font-size:0.78rem;color:#666;}
+.doodle-corner{position:absolute;font-size:1.5rem;opacity:0.4;}
+.meme-footer{text-align:center;margin-top:8px;font-family:'Caveat',cursive;font-size:0.82rem;color:#aaa;}
+.drag-handle{display:none !important;}
+.made-with{margin-top:24px;font-family:'Caveat',cursive;font-size:0.95rem;color:#888;}
+.made-with a{color:#1e3a5f;}
+</style>
+</head>
+<body>
+<div id="meme-canvas">${canvasClone.innerHTML}</div>
+<p class="made-with">Made with <a href="${window.location.origin}">Application Meme Generator ✨</a></p>
+</body>
+</html>`;
+
+    // Only the small HTML snapshot goes through Vercel
+    const res = await fetch('/api/publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ html: snapshot })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Publish failed');
+
+    const shareUrl = `${window.location.origin}/m/${data.id}`;
+    document.getElementById('share-url').value = shareUrl;
+    document.getElementById('share-modal').classList.add('open');
+
+  } catch (err) {
+    alert('Could not publish: ' + err.message);
+  } finally {
+    btn.textContent = '🌐 Publish to Web';
+    btn.disabled = false;
+  }
+}
+
+function copyShareUrl() {
+  const input = document.getElementById('share-url');
+  navigator.clipboard.writeText(input.value).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✅ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy link'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function closeShareModal() {
+  document.getElementById('share-modal').classList.remove('open');
+}
+
+function smartPrint() {
+  const canvas = document.getElementById('meme-canvas');
+
+  // Letter page in pixels at 96dpi: 8.5in × 11in
+  const PAGE_W_PX = 8.5 * 96;
+  const PAGE_H_PX = 11 * 96;
+
+  // Reset any prior scale so we measure natural size
+  canvas.style.transform = '';
+  canvas.style.transformOrigin = '';
+  canvas.style.width = '';
+
+  // Force a layout pass, then measure
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const naturalW = canvas.offsetWidth;
+      const naturalH = canvas.scrollHeight;
+
+      // Scale to fill the page width exactly, then check if height fits
+      const scaleByW = PAGE_W_PX / naturalW;
+      const scaledH   = naturalH * scaleByW;
+
+      // If scaled height exceeds the page, shrink further
+      let scale = scaleByW;
+      if (scaledH > PAGE_H_PX) {
+        scale = PAGE_H_PX / naturalH;
+      }
+
+      // Clamp: never enlarge beyond 1, cap shrink at 0.45 to keep legible
+      scale = Math.min(1, Math.max(0.45, scale));
+
+      // Apply transform so the scaled canvas exactly fills print page
+      canvas.style.transformOrigin = 'top left';
+      canvas.style.transform = `scale(${scale})`;
+      // Collapse the layout space so nothing below it shifts
+      canvas.style.marginBottom = `${(naturalH * scale) - naturalH}px`;
+
+      // Small delay so the browser re-renders the scaled canvas before printing
+      setTimeout(() => {
+        // Temporarily remove contenteditable so no edit UI bleeds into PDF
+        const editables = canvas.querySelectorAll('[data-editable]');
+        editables.forEach(el => el.removeAttribute('contenteditable'));
+
+        window.print();
+
+        // Restore after print dialog closes
+        setTimeout(() => {
+          canvas.style.transform = '';
+          canvas.style.transformOrigin = '';
+          canvas.style.marginBottom = '';
+          canvas.style.width = '';
+        }, 500);
+      }, 120);
+    });
+  });
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function renderMeme(m, d) {
+  const colors = (m.color_scheme?.length >= 4) ? m.color_scheme : ['#f4a5c0','#7ec8e3','#fde68a','#c4b5fd'];
+  const tc = [...colors, '#a7f3d0', '#fca5a5'];
+
+  const titleHtml = (m.title_words||['PLZ','HIRE','ME']).map((w,i) => {
+    const rots=[-2,1.5,-1,2,-1.5];
+    return `<span class="title-word" data-editable style="position:relative;background:${tc[i%tc.length]};transform:rotate(${rots[i%rots.length]}deg);">${w}</span>`;
+  }).join(' ');
+
+  const skillChips = (m.skill_chips||[]).map((s,i)=>`<span class="fact-chip" style="background:${tc[i%tc.length]};">${s}</span>`).join('');
+  const funFacts = (m.fun_facts||[]).map(f=>`<li>${f}</li>`).join('');
+  const dreamJobs = (m.dream_jobs_list || d.dream_jobs.split(',').map(x=>x.trim()).filter(Boolean)).map(j=>`<li>${j}</li>`).join('');
+
+  const activePhotos = photoDataUrls.map((url,i)=>url?{url,caption:d.captions[i]||''}:null).filter(Boolean);
+  const pc = activePhotos.length;
+
+  const petHtml = d.pet ? `<div class="sticky taped" style="background:${colors[2]};text-align:center;padding:8px 10px;">
+    ${petPhotoDataUrl
+      ? `<img src="${petPhotoDataUrl}" alt="${d.pet}" style="width:100%;max-height:90px;object-fit:contain;border-radius:4px;border:1px solid #ccc;background:#f9f9f9;">`
+      : `<div style="font-size:1.4rem;">🐾</div>`}
+    <div style="font-size:0.88rem;color:#444;margin-top:4px;font-family:'Caveat',cursive;font-weight:600;">${d.pet}</div>
+    ${d.pet_caption ? `<div style="font-size:0.78rem;color:#666;font-family:'Caveat',cursive;">${d.pet_caption}</div>` : ''}
+  </div>` : '';
+
+  // ── Layout logic ──
+  // Main photo always spans full width at top (below headline).
+  // Extra photos (2nd, 3rd) are scattered into the columns below.
+  // Always 2-col layout for the body columns.
+
+  // Helper: full-width hero photo at top
+  function heroPhoto(p) {
+    const rot = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 1.2 + 0.3).toFixed(1);
+    return `<div class="hero-photo-row">
+      <div class="photo-card taped" style="transform:rotate(${rot}deg);width:200px;">
+        <img src="${p.url}" alt="" style="width:100%;max-height:160px;object-fit:contain;background:#f9f9f9;">
+        <div class="photo-caption" data-editable style="position:relative;">${p.caption||d.name}</div>
+      </div>
+    </div>`;
+  }
+
+  // Helper: scattered photo for inside a column
+  function scatteredPhoto(p, idx) {
+    const rots = [-2.8, 2.1, -1.5, 1.8, -2.2];
+    return `<div class="photo-card taped" style="transform:rotate(${rots[idx%rots.length]}deg);width:100%;">
+      <img src="${p.url}" alt="" style="width:100%;max-height:110px;object-fit:contain;background:#f9f9f9;">
+      <div class="photo-caption" data-editable style="position:relative;">${p.caption||''}</div>
+    </div>`;
+  }
+
+  const mainPhotoHtml  = pc >= 1 ? heroPhoto(activePhotos[0]) : '';
+  const extraPhoto1    = pc >= 2 ? scatteredPhoto(activePhotos[1], 1) : '';
+  const extraPhoto2    = pc >= 3 ? scatteredPhoto(activePhotos[2], 2) : '';
+
+  // Helper: wrap a block in a draggable container with a handle
+  function draggable(content) {
+    return `<div class="draggable-block" draggable="true" style="position:relative;">
+      <span class="drag-handle" title="Drag to rearrange">⠿</span>
+      ${content}
+    </div>`;
+  }
+
+  // Always 2-col body; extras dropped into columns where they add balance
+  let bodyHtml = `
+    ${mainPhotoHtml}
+    <div class="meme-body layout-2col" id="meme-cols">
+      <div class="meme-col" data-col="0">
+        ${draggable(`<div class="sticky taped" style="background:${colors[0]};">
+          <h3 data-editable style="position:relative;">Hello, I'm ${d.name}!</h3>
+          <p data-editable style="position:relative;">${m.intro||d.tagline||'Ready to bring my best!'}</p>
+        </div>`)}
+        ${draggable(`<div class="sticky" style="background:white;border:2px solid ${colors[1]};">
+          <h3 data-editable style="position:relative;color:${colors[1]};">My Background 📚</h3>
+          <p data-editable style="position:relative;">${m.career_summary||d.career_story}</p>
+        </div>`)}
+        ${extraPhoto1 ? draggable(extraPhoto1) : ''}
+        ${draggable(`<div class="sticky taped" style="background:${colors[1]}28;border:2px dashed ${colors[1]};">
+          <h3 data-editable style="position:relative;">✨ My Superpower</h3>
+          <p data-editable style="position:relative;font-style:italic;">"${m.superpower_quote||d.superpower||'I get things done.'}"</p>
+        </div>`)}
+        ${petHtml ? draggable(petHtml) : ''}
+      </div>
+      <div class="meme-col" data-col="1">
+        ${draggable(`<div class="sticky" style="background:white;border:2px solid var(--navy);">
+          <h3 data-editable style="position:relative;">🎯 Jobs I'm Hoping For:</h3>
+          <ul class="job-list" data-editable style="position:relative;">${dreamJobs}</ul>
+        </div>`)}
+        ${draggable(`<div class="sticky" style="background:${colors[3]}30;border:2px solid ${colors[3]};">
+          <h3 data-editable style="position:relative;">🛠️ Skills</h3>
+          <div class="facts-row" data-editable style="position:relative;">${skillChips}</div>
+        </div>`)}
+        ${extraPhoto2 ? draggable(extraPhoto2) : ''}
+        ${draggable(`<div class="sticky" style="background:${colors[2]}45;border:2px solid ${colors[2]};">
+          <h3 data-editable style="position:relative;">⚡ Fun Facts</h3>
+          <ul class="job-list" data-editable style="position:relative;">${funFacts}</ul>
+        </div>`)}
+        ${draggable(`<div class="sticky" style="background:${colors[0]}38;">
+          <h3 data-editable style="position:relative;">💫 Vibe Check</h3>
+          <p data-editable style="position:relative;">${m.personality_blurb||d.personality||''}</p>
+          ${d.hobby?`<div data-editable style="position:relative;margin-top:3px;font-size:0.9rem;">🌀 ${d.hobby}</div>`:''}
+          <div data-editable style="position:relative;margin-top:3px;font-size:0.88rem;">🏡 ${d.work_env} · ⚡ ${d.team_energy}</div>
+        </div>`)}
+      </div>
+    </div>`;
+
+  const canvas = document.getElementById('meme-canvas');
+  canvas.innerHTML = `
+    <span class="doodle-corner" style="top:9px;left:13px;">✦</span>
+    <span class="doodle-corner" style="bottom:9px;right:13px;">✿</span>
+    <span class="doodle-corner" style="bottom:9px;left:13px;font-size:1rem;">♡</span>
+    <div class="meme-title"><div class="title-cutout">${titleHtml}</div></div>
+    <div class="headline-box" data-editable style="position:relative;">${m.headline||`Meet ${d.name}: Your Next Incredible Hire`}</div>
+    ${bodyHtml}
+    <div class="wavy"></div>
+    <div class="stats-row">
+      <div class="stat-box" style="border-color:${colors[0]};">
+        <span class="stat-num" data-editable style="position:relative;color:${colors[0]};">${m.stat1_num||d.years_exp||'∞'}</span>
+        <span class="stat-label" data-editable style="position:relative;">${m.stat1_label||'yrs experience'}</span>
+      </div>
+      <div class="stat-box" style="border-color:${colors[1]};">
+        <span class="stat-num" data-editable style="position:relative;color:${colors[1]};">${m.stat2_num||(d.skills.split(',').length)||'5'}</span>
+        <span class="stat-label" data-editable style="position:relative;">${m.stat2_label||'core skills'}</span>
+      </div>
+      <div class="stat-box" style="border-color:${colors[2]};">
+        <span class="stat-num" data-editable style="position:relative;color:${colors[2]};">${m.stat3_num||'100%'}</span>
+        <span class="stat-label" data-editable style="position:relative;">${m.stat3_label||'dedicated'}</span>
+      </div>
+      <div class="stat-box" style="border-color:${colors[3]};flex:2;">
+        <span class="stat-num" style="font-size:1rem;display:block;padding:1px;">✉️</span>
+        <span class="stat-label" data-editable style="position:relative;font-size:0.88rem;">${m.closing_line||'Ready to hit the ground running!'}</span>
+      </div>
+    </div>
+    <div class="meme-footer">Made with ✨ — Application Meme Generator</div>
+  `;
+
+  applyBg(pickBg());
+
+  // Show edit hint
+  document.getElementById('edit-hint').style.display = 'block';
+
+  // ── Inline editing ──────────────────────────────────────────────────────
+  // Wire up click-to-edit on all [data-editable] elements
+  initInlineEditing();
+
+  // ── Drag and drop ────────────────────────────────────────────────────────
+  initDragAndDrop();
+
+  document.getElementById('output-phase').style.display = 'block';
+  document.getElementById('output-phase').scrollIntoView({ behavior: 'smooth' });
+}
+
+function initInlineEditing() {
+  const canvas = document.getElementById('meme-canvas');
+
+  canvas.addEventListener('click', function(e) {
+    const target = e.target.closest('[data-editable]');
+    if (!target) return;
+    if (target.contentEditable === 'true') return; // already editing
+
+    // Turn on editing
+    target.contentEditable = 'true';
+    target.focus();
+
+    // Place cursor at end
+    const range = document.createRange();
+    range.selectNodeContents(target);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    // Commit on blur
+    function commit() {
+      target.contentEditable = 'false';
+      target.removeEventListener('blur', commit);
+      target.removeEventListener('keydown', onKey);
+    }
+
+    // Escape = commit, Enter in single-line elements = commit
+    function onKey(e) {
+      if (e.key === 'Escape') {
+        commit();
+        e.preventDefault();
+      }
+      // Allow Enter for multi-line (p, ul, div), block it for headings/spans
+      const multiLine = ['P','UL','DIV'].includes(target.tagName);
+      if (e.key === 'Enter' && !multiLine) {
+        commit();
+        e.preventDefault();
+      }
+    }
+
+    target.addEventListener('blur', commit);
+    target.addEventListener('keydown', onKey);
+  });
+}
+
+// ── Drag and Drop ───────────────────────────────────────────────────────────
+function initDragAndDrop() {
+  const canvas = document.getElementById('meme-canvas');
+  let dragEl = null;       // the block being dragged
+  let dropTarget = null;   // column or block we're hovering over
+  let dropPosition = null; // 'before' or 'after' relative to dropTarget
+
+  // Remove all drop indicators
+  function clearIndicators() {
+    canvas.querySelectorAll('.drop-indicator').forEach(el => el.remove());
+    canvas.querySelectorAll('.meme-col').forEach(col => col.classList.remove('drag-over'));
+  }
+
+  // Insert a visual drop indicator before/after an element
+  function showIndicator(refEl, position) {
+    clearIndicators();
+    const ind = document.createElement('div');
+    ind.className = 'drop-indicator active';
+    if (position === 'before') {
+      refEl.parentNode.insertBefore(ind, refEl);
+    } else {
+      refEl.parentNode.insertBefore(ind, refEl.nextSibling);
+    }
+  }
+
+  // ── Drag start ──
+  canvas.addEventListener('dragstart', e => {
+    const block = e.target.closest('.draggable-block');
+    if (!block) return;
+    // Only start drag from the handle
+    if (!e.target.closest('.drag-handle')) {
+      e.preventDefault();
+      return;
+    }
+    dragEl = block;
+    setTimeout(() => block.classList.add('is-dragging'), 0);
+    e.dataTransfer.effectAllowed = 'move';
+  });
+
+  // ── Drag over ──
+  canvas.addEventListener('dragover', e => {
+    if (!dragEl) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    const col = e.target.closest('.meme-col');
+    if (!col) return;
+
+    // Find the closest draggable-block in this column
+    const blocks = Array.from(col.querySelectorAll(':scope > .draggable-block'));
+    if (blocks.length === 0) {
+      // Empty column — just highlight it
+      clearIndicators();
+      col.classList.add('drag-over');
+      dropTarget = col;
+      dropPosition = 'append';
+      return;
+    }
+
+    // Find which block we're nearest to
+    let nearest = null;
+    let nearestDist = Infinity;
+    let pos = 'after';
+
+    blocks.forEach(b => {
+      if (b === dragEl) return;
+      const rect = b.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      const dist = Math.abs(e.clientY - midY);
+      if (dist < nearestDist) {
+        nearestDist = dist;
+        nearest = b;
+        pos = e.clientY < midY ? 'before' : 'after';
+      }
+    });
+
+    if (nearest) {
+      showIndicator(nearest, pos);
+      dropTarget = nearest;
+      dropPosition = pos;
+    }
+  });
+
+  // ── Drag leave ──
+  canvas.addEventListener('dragleave', e => {
+    if (!e.relatedTarget || !canvas.contains(e.relatedTarget)) {
+      clearIndicators();
+    }
+  });
+
+  // ── Drop ──
+  canvas.addEventListener('drop', e => {
+    e.preventDefault();
+    if (!dragEl || !dropTarget) return;
+    clearIndicators();
+
+    if (dropPosition === 'append') {
+      // Drop into empty column
+      dropTarget.appendChild(dragEl);
+    } else if (dropPosition === 'before') {
+      dropTarget.parentNode.insertBefore(dragEl, dropTarget);
+    } else {
+      dropTarget.parentNode.insertBefore(dragEl, dropTarget.nextSibling);
+    }
+
+    dragEl.classList.remove('is-dragging');
+    dragEl = null;
+    dropTarget = null;
+    dropPosition = null;
+  });
+
+  // ── Drag end (cleanup if dropped outside) ──
+  canvas.addEventListener('dragend', () => {
+    if (dragEl) dragEl.classList.remove('is-dragging');
+    clearIndicators();
+    dragEl = null;
+    dropTarget = null;
+    dropPosition = null;
+  });
+}
+</script>
+</body>
+</html>
