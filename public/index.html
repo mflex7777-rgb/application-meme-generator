@@ -280,39 +280,40 @@
   /* ===== DRAG AND DROP ===== */
   .drag-handle {
     position: absolute;
-    top: 6px; left: 6px;
-    width: 18px; height: 18px;
-    display: none;
+    top: 5px; left: 5px;
+    width: 22px; height: 22px;
+    display: flex;
     align-items: center; justify-content: center;
     cursor: grab;
-    color: rgba(30,58,95,0.35);
-    font-size: 14px;
+    color: rgba(30,58,95,0.0);
+    font-size: 15px;
     line-height: 1;
     user-select: none;
     z-index: 10;
-    border-radius: 3px;
+    border-radius: 4px;
+    background: transparent;
     transition: color 0.15s, background 0.15s;
-  }
-  .drag-handle:hover {
-    color: var(--navy);
-    background: rgba(30,58,95,0.08);
   }
   .drag-handle:active { cursor: grabbing; }
 
-  /* Show handle on sticky hover, hide on text edit */
-  .draggable-block:hover .drag-handle { display: flex; }
-  .draggable-block[contenteditable="true"] .drag-handle { display: none; }
+  /* Show on hover of the whole draggable block */
+  .draggable-block:hover > .drag-handle {
+    color: rgba(30,58,95,0.5);
+    background: rgba(30,58,95,0.07);
+  }
+  .draggable-block:hover > .drag-handle:hover {
+    color: var(--navy);
+    background: rgba(30,58,95,0.14);
+  }
 
   /* Block being dragged */
   .draggable-block.is-dragging {
-    opacity: 0.4;
-    outline: 2px dashed var(--navy);
-    outline-offset: 2px;
+    opacity: 0.35;
   }
 
-  /* Drop zone indicator — shown when dragging over a column */
+  /* Drop indicator line */
   .drop-indicator {
-    height: 4px;
+    height: 3px;
     background: var(--navy);
     border-radius: 2px;
     margin: 2px 0;
@@ -320,13 +321,6 @@
     pointer-events: none;
   }
   .drop-indicator.active { display: block; }
-
-  /* Columns accept drops */
-  .meme-col.drag-over {
-    outline: 2px dashed rgba(30,58,95,0.3);
-    outline-offset: 4px;
-    border-radius: 4px;
-  }
 
   /* Hide drag handles in print */
   @media print {
@@ -1036,10 +1030,11 @@ function renderMeme(m, d) {
   // Extra photos (2nd, 3rd) are scattered into the columns below.
   // Always 2-col layout for the body columns.
 
-  // Helper: full-width hero photo at top
+  // Helper: full-width hero photo at top — draggable
   function heroPhoto(p) {
     const rot = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 1.2 + 0.3).toFixed(1);
-    return `<div class="hero-photo-row">
+    return `<div class="draggable-block hero-photo-draggable" draggable="true" style="position:relative;display:flex;justify-content:center;margin-bottom:10px;">
+      <span class="drag-handle" title="Drag to rearrange">⠿</span>
       <div class="photo-card taped" style="transform:rotate(${rot}deg);width:200px;">
         <img src="${p.url}" alt="" style="width:100%;max-height:160px;object-fit:contain;background:#f9f9f9;">
         <div class="photo-caption" data-editable style="position:relative;">${p.caption||d.name}</div>
@@ -1070,7 +1065,7 @@ function renderMeme(m, d) {
 
   // Always 2-col body; extras dropped into columns where they add balance
   let bodyHtml = `
-    ${mainPhotoHtml}
+    <div id="hero-zone" class="meme-col" style="margin-bottom:6px;">${mainPhotoHtml}</div>
     <div class="meme-body layout-2col" id="meme-cols">
       <div class="meme-col" data-col="0">
         ${draggable(`<div class="sticky taped" style="background:${colors[0]};">
@@ -1206,121 +1201,96 @@ function initInlineEditing() {
 // ── Drag and Drop ───────────────────────────────────────────────────────────
 function initDragAndDrop() {
   const canvas = document.getElementById('meme-canvas');
-  let dragEl = null;       // the block being dragged
-  let dropTarget = null;   // column or block we're hovering over
-  let dropPosition = null; // 'before' or 'after' relative to dropTarget
+  if (!canvas) return;
 
-  // Remove all drop indicators
-  function clearIndicators() {
-    canvas.querySelectorAll('.drop-indicator').forEach(el => el.remove());
-    canvas.querySelectorAll('.meme-col').forEach(col => col.classList.remove('drag-over'));
+  let dragEl = null;
+  let indicator = null;
+
+  function removeIndicator() {
+    if (indicator) { indicator.remove(); indicator = null; }
   }
 
-  // Insert a visual drop indicator before/after an element
-  function showIndicator(refEl, position) {
-    clearIndicators();
-    const ind = document.createElement('div');
-    ind.className = 'drop-indicator active';
-    if (position === 'before') {
-      refEl.parentNode.insertBefore(ind, refEl);
+  function makeIndicator() {
+    const el = document.createElement('div');
+    el.className = 'drop-indicator active';
+    return el;
+  }
+
+  // Only start drag when mousedown is on the handle
+  // We set draggable dynamically so text selection still works normally
+  canvas.addEventListener('mousedown', e => {
+    const handle = e.target.closest('.drag-handle');
+    if (handle) {
+      const block = handle.closest('.draggable-block');
+      if (block) block.setAttribute('draggable', 'true');
     } else {
-      refEl.parentNode.insertBefore(ind, refEl.nextSibling);
+      // Not on a handle — disable dragging so text clicks work
+      canvas.querySelectorAll('.draggable-block').forEach(b => b.removeAttribute('draggable'));
     }
-  }
+  });
 
-  // ── Drag start ──
   canvas.addEventListener('dragstart', e => {
     const block = e.target.closest('.draggable-block');
-    if (!block) return;
-    // Only start drag from the handle
-    if (!e.target.closest('.drag-handle')) {
+    if (!block || !block.getAttribute('draggable')) {
       e.preventDefault();
       return;
     }
     dragEl = block;
-    setTimeout(() => block.classList.add('is-dragging'), 0);
     e.dataTransfer.effectAllowed = 'move';
+    // Use a transparent image as drag ghost (we style the original instead)
+    const img = new Image();
+    img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    e.dataTransfer.setDragImage(img, 0, 0);
+    setTimeout(() => block.classList.add('is-dragging'), 0);
   });
 
-  // ── Drag over ──
+  canvas.addEventListener('dragend', () => {
+    if (dragEl) {
+      dragEl.classList.remove('is-dragging');
+      dragEl.removeAttribute('draggable');
+      dragEl = null;
+    }
+    removeIndicator();
+  });
+
+  // Allow drop on any meme-col
   canvas.addEventListener('dragover', e => {
     if (!dragEl) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
 
     const col = e.target.closest('.meme-col');
-    if (!col) return;
+    if (!col) { removeIndicator(); return; }
 
-    // Find the closest draggable-block in this column
-    const blocks = Array.from(col.querySelectorAll(':scope > .draggable-block'));
-    if (blocks.length === 0) {
-      // Empty column — just highlight it
-      clearIndicators();
-      col.classList.add('drag-over');
-      dropTarget = col;
-      dropPosition = 'append';
-      return;
-    }
+    // Find where in this column to show the indicator
+    const siblings = Array.from(col.querySelectorAll(':scope > .draggable-block'))
+      .filter(b => b !== dragEl);
 
-    // Find which block we're nearest to
-    let nearest = null;
-    let nearestDist = Infinity;
-    let pos = 'after';
+    removeIndicator();
+    indicator = makeIndicator();
 
-    blocks.forEach(b => {
-      if (b === dragEl) return;
-      const rect = b.getBoundingClientRect();
-      const midY = rect.top + rect.height / 2;
-      const dist = Math.abs(e.clientY - midY);
-      if (dist < nearestDist) {
-        nearestDist = dist;
-        nearest = b;
-        pos = e.clientY < midY ? 'before' : 'after';
+    let insertRef = null;
+    for (const sib of siblings) {
+      const rect = sib.getBoundingClientRect();
+      if (e.clientY < rect.top + rect.height / 2) {
+        insertRef = sib;
+        break;
       }
-    });
-
-    if (nearest) {
-      showIndicator(nearest, pos);
-      dropTarget = nearest;
-      dropPosition = pos;
     }
+
+    col.insertBefore(indicator, insertRef || null);
   });
 
-  // ── Drag leave ──
-  canvas.addEventListener('dragleave', e => {
-    if (!e.relatedTarget || !canvas.contains(e.relatedTarget)) {
-      clearIndicators();
-    }
-  });
-
-  // ── Drop ──
   canvas.addEventListener('drop', e => {
     e.preventDefault();
-    if (!dragEl || !dropTarget) return;
-    clearIndicators();
+    if (!dragEl || !indicator) return;
 
-    if (dropPosition === 'append') {
-      // Drop into empty column
-      dropTarget.appendChild(dragEl);
-    } else if (dropPosition === 'before') {
-      dropTarget.parentNode.insertBefore(dragEl, dropTarget);
-    } else {
-      dropTarget.parentNode.insertBefore(dragEl, dropTarget.nextSibling);
-    }
-
+    // Insert dragged block where the indicator is
+    indicator.parentNode.insertBefore(dragEl, indicator);
+    removeIndicator();
     dragEl.classList.remove('is-dragging');
+    dragEl.removeAttribute('draggable');
     dragEl = null;
-    dropTarget = null;
-    dropPosition = null;
-  });
-
-  // ── Drag end (cleanup if dropped outside) ──
-  canvas.addEventListener('dragend', () => {
-    if (dragEl) dragEl.classList.remove('is-dragging');
-    clearIndicators();
-    dragEl = null;
-    dropTarget = null;
-    dropPosition = null;
   });
 }
 </script>
