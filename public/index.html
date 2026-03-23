@@ -277,7 +277,7 @@
   .doodle-corner { position: absolute; font-size: 1.5rem; opacity: 0.4; }
   .meme-footer { text-align: center; margin-top: 8px; font-family: 'Caveat', cursive; font-size: 0.82rem; color: #aaa; }
 
-  /* Hero row flanking drop zones */
+  /* Hero row — all three columns are droppable */
   .hero-flank {
     border: 2px dashed transparent;
     border-radius: 6px;
@@ -285,7 +285,7 @@
     min-height: 60px;
   }
   .hero-flank:empty::after {
-    content: 'drag sections here';
+    content: 'drag here';
     display: flex;
     align-items: center;
     justify-content: center;
@@ -293,7 +293,7 @@
     min-height: 60px;
     font-family: 'Caveat', cursive;
     font-size: 0.82rem;
-    color: rgba(30,58,95,0.25);
+    color: rgba(30,58,95,0.22);
     text-align: center;
   }
   .hero-flank.drag-over-active {
@@ -1091,11 +1091,11 @@ function renderMeme(m, d) {
     </div>`;
   }
 
-  // Always 2-col body below; hero row is 3-col: [left drop | photo | right drop]
+  // Always 2-col body below; hero row is 3-col: all three columns are droppable
   let bodyHtml = `
     <div class="meme-body layout-3col" id="hero-row" style="gap:10px;margin-bottom:8px;align-items:start;">
       <div class="meme-col hero-flank" data-col="hero-left" style="min-height:60px;"></div>
-      <div class="meme-col hero-center" style="align-items:center;">${mainPhotoHtml}</div>
+      <div class="meme-col hero-flank hero-center" data-col="hero-center" style="min-height:60px;">${mainPhotoHtml}</div>
       <div class="meme-col hero-flank" data-col="hero-right" style="min-height:60px;"></div>
     </div>
     <div class="meme-body layout-2col" id="meme-cols">
@@ -1295,7 +1295,7 @@ function initDragAndDrop() {
     const col = e.target.closest('.meme-col');
     if (!col) { removeIndicator(); return; }
 
-    // Highlight hero flank columns
+    // Highlight hero columns on hover
     canvas.querySelectorAll('.hero-flank').forEach(f => f.classList.remove('drag-over-active'));
     if (col.classList.contains('hero-flank')) {
       col.classList.add('drag-over-active');
