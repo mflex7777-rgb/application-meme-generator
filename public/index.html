@@ -277,6 +277,30 @@
   .doodle-corner { position: absolute; font-size: 1.5rem; opacity: 0.4; }
   .meme-footer { text-align: center; margin-top: 8px; font-family: 'Caveat', cursive; font-size: 0.82rem; color: #aaa; }
 
+  /* Hero row flanking drop zones */
+  .hero-flank {
+    border: 2px dashed transparent;
+    border-radius: 6px;
+    transition: border-color 0.15s, background 0.15s;
+    min-height: 60px;
+  }
+  .hero-flank:empty::after {
+    content: 'drag sections here';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 60px;
+    font-family: 'Caveat', cursive;
+    font-size: 0.82rem;
+    color: rgba(30,58,95,0.25);
+    text-align: center;
+  }
+  .hero-flank.drag-over-active {
+    border-color: rgba(30,58,95,0.35);
+    background: rgba(30,58,95,0.03);
+  }
+
   /* ===== DRAG AND DROP ===== */
   .drag-handle {
     position: absolute;
@@ -374,6 +398,8 @@
     #edit-hint { display: none !important; }
     [data-editable] { outline: none !important; cursor: default !important; }
     [data-editable]::after { display: none !important; }
+    .hero-flank:empty::after { display: none !important; }
+    .hero-flank { border: none !important; }
     #form-phase, #loading-phase { display: none !important; }
     #output-phase {
       display: block !important; padding: 0 !important; margin: 0 !important;
@@ -897,6 +923,8 @@ body{background:#f0f0f0;display:flex;flex-direction:column;align-items:center;pa
 .doodle-corner{position:absolute;font-size:1.5rem;opacity:0.4;}
 .meme-footer{text-align:center;margin-top:8px;font-family:'Caveat',cursive;font-size:0.82rem;color:#aaa;}
 .drag-handle{display:none !important;}
+.hero-flank:empty::after{display:none !important;}
+.hero-flank{border:none !important;}
 .made-with{margin-top:24px;font-family:'Caveat',cursive;font-size:0.95rem;color:#888;}
 .made-with a{color:#1e3a5f;}
 </style>
@@ -1063,9 +1091,13 @@ function renderMeme(m, d) {
     </div>`;
   }
 
-  // Always 2-col body; extras dropped into columns where they add balance
+  // Always 2-col body below; hero row is 3-col: [left drop | photo | right drop]
   let bodyHtml = `
-    <div id="hero-zone" class="meme-col" style="margin-bottom:6px;">${mainPhotoHtml}</div>
+    <div class="meme-body layout-3col" id="hero-row" style="gap:10px;margin-bottom:8px;align-items:start;">
+      <div class="meme-col hero-flank" data-col="hero-left" style="min-height:60px;"></div>
+      <div class="meme-col hero-center" style="align-items:center;">${mainPhotoHtml}</div>
+      <div class="meme-col hero-flank" data-col="hero-right" style="min-height:60px;"></div>
+    </div>
     <div class="meme-body layout-2col" id="meme-cols">
       <div class="meme-col" data-col="0">
         ${draggable(`<div class="sticky taped" style="background:${colors[0]};">
@@ -1251,6 +1283,7 @@ function initDragAndDrop() {
       dragEl = null;
     }
     removeIndicator();
+    canvas.querySelectorAll('.hero-flank').forEach(f => f.classList.remove('drag-over-active'));
   });
 
   // Allow drop on any meme-col
@@ -1261,6 +1294,12 @@ function initDragAndDrop() {
 
     const col = e.target.closest('.meme-col');
     if (!col) { removeIndicator(); return; }
+
+    // Highlight hero flank columns
+    canvas.querySelectorAll('.hero-flank').forEach(f => f.classList.remove('drag-over-active'));
+    if (col.classList.contains('hero-flank')) {
+      col.classList.add('drag-over-active');
+    }
 
     // Find where in this column to show the indicator
     const siblings = Array.from(col.querySelectorAll(':scope > .draggable-block'))
